@@ -1,79 +1,100 @@
 <?php
-require __DIR__ . '/Model.class.php';
 
-class Cliente extends Model {
+chdir(__DIR__);
+require_once './Model.php';
 
+class Cliente extends Model
+{
+
+    protected string $table;
+    
     public function __construct()
     {
         parent::__construct();
 
-        $this->tabela ='clientes';
+        $this->table = 'cliente';
+
     }
-     function inserir(array $dados):?int 
-     {
 
-         $stmt = $this->prepare("INSERT INTO {$this->tabela}
-                                          (nome,telefone) 
-                                        VALUES
-                                          (:nome,:telefone)");
-
-         $stmt->bindParam(':nome', $dados['nome']);
-         $stmt->bindParam(':telefone', $dados['telefone']);
-
-         if($stmt->execute()){
-
-           return ($this->lastInsertId());
-
-         } else{
-
-        return null;
-         }
-     }
+    function inserir(array $dados): ?int
+    {
         
-     function atualizar(int $id, array $dados):bool
-     {
-      
-         $stmt = $this->prepare("UPDATE  {$this->tabela} SET
-                                          nome = :nome, telefone = :telefone
-                                        WHERE
-                                          id = :id");
+        $stmt = $this->prepare("INSERT INTO {$this->table} (Nome, Tel) 
+                                            VALUES (:Nome, :Tel)");
 
-         $stmt->bindParam(':id', $id);
-         $stmt->bindParam(':nome', $dados['nome']);
-         $stmt->bindParam(':telefone', $dados['telefone']);
+        $stmt->bindParam(':Nome', $dados['Nome']); 
+        $stmt->bindParam(':Tel', $dados['Tel']);
 
-         if($stmt->execute()){
+
+        if($stmt->execute()){
+            return $this->lastInsertId();
+        }
+        else{
+            return false;
+        }        
+    }
+
+    function atualizar(int $id_cliente, array $dados): bool
+    {
+        $stmt = $this->prepare("UPDATE {$this->table} SET 
+                                    Nome = :Nome, Tel = :Tel
+                                WHERE 
+                                    id_cliente = :id_cliente");
+
+        $stmt->bindParam(':id_cliente', $id_cliente); 
+        $stmt->bindParam(':Nome', $dados['Nome']); 
+        $stmt->bindParam(':Tel', $dados['Tel']);
+
+
+        if($stmt->rowCount() > 0){
+            return true;
+        }
+        else{
+            return false;
+        }     
+    }
+
+    function apagar(int $id_cliente): bool
+    {
+        $stmt = $this->prepare("DELETE FROM {$this->table} WHERE id_cliente = :id_cliente");
+
+        $stmt->bindParam(':id_cliente', $id_cliente);         
+
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0){
+            echo "Sucesso ao apagar";
 
             return true;
- 
-          }else{
+        }
+        else{
+            echo "Nenhuma linha afetada";
+            return false;
+        } 
+    }
 
-             return false;
-          }
-     }
-    
-     function apagar(int $id):bool
-     {
-                 $stmt = $this->prepare("DELETE FROM  {$this->tabela} WHERE id = :id");
+    function listar(int $id_cliente = null): ?array
+    {
+        if($id_cliente){
 
-         $stmt->bindParam(':id', $id);
-         
-         if($stmt->execute()){
+            $stmt = $this->prepare("SELECT id_cliente, nome, tel FROM {$this->table} WHERE id_cliente = :id_cliente");
 
-            return true;
- 
-          }else{
+            $stmt->bindParam(':id_cliente', $id_cliente);
+        }
+        else{
+            $stmt = $this->prepare("SELECT id_cliente, nome, tel FROM {$this->table} ");
+        }
 
-             return false;
-          }
-     }
+        $stmt->execute();
 
-     function listar(int $id = null):?array
-     {
-        return null;
-     }
+        $lista = [];
+
+        while($registro = $stmt->fetch(PDO::FETCH_ASSOC)){
+            $lista[] = $registro;
+        }
+        
+        return $lista;
+    }
 }
 
-$clientes = new Cliente;
 
-echo $clientes->apagar(1);
