@@ -1,10 +1,13 @@
 <?php
 
 chdir(__DIR__);
-require_once './Model.php';
+require_once __DIR__ . './Model.class.php';
+require_once __DIR__ . '/Investimento.class.php';
 
 class Cliente extends Model
 {
+
+    private Investimento $investimento;
 
     protected string $table;
     
@@ -13,6 +16,8 @@ class Cliente extends Model
         parent::__construct();
 
         $this->table = 'cliente';
+
+        $this->investimento = new Investimento;
 
     }
 
@@ -94,6 +99,11 @@ class Cliente extends Model
         }
         
         return $lista;
+    }
+    
+    function carteira(int $id_cliente):array
+    {
+         return $this->investimento->cliente($id_cliente);
     }
 }
 
